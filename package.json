@@ -5,7 +5,9 @@
     "private": true,
     "scripts": {
         "dev": "bun run ./src/index.ts",
-        "build": "bun build ./src/index.ts --outdir ./dist --target bun"
+        "clean": "rm -rf dist && echo 'Done.'",
+        "build": "bun run clean && bun build ./src/index.ts --outdir ./dist --target bun --production",
+        "prod": "bun run ./dist/index.js"
     },
     "devDependencies": {
         "@types/bun": "latest"
