@@ -1,5 +1,6 @@
 import { readdir, stat } from 'node:fs/promises';
 import { extname, join } from 'node:path';
+import sharedHelpers from '../../shared/helpers';
 
 /** path is file and allowed extension */
 export const isAllowedExtension = async (path: string, extensions: string[]): Promise<boolean> => {
@@ -22,4 +23,13 @@ export const getFilesOfDirectory = async (
     }
 
     return files;
+};
+
+/** copying a file */
+export const copyFile = async (filePath: string, saveDir: string) => {
+    const newfile = join(
+        saveDir,
+        [sharedHelpers.formatDate(new Date(), 'yyyyMMdd_mm'), extname(filePath)].join('')
+    );
+    await Bun.write(newfile, await Bun.file(filePath).arrayBuffer());
 };

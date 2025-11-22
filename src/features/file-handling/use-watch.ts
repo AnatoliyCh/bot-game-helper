@@ -1,23 +1,14 @@
 import fs from 'node:fs';
-import { copyFile, mkdir } from 'node:fs/promises';
-import { extname, join } from 'node:path';
-import { getFilesOfDirectory, isAllowedExtension } from './helpers';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { copyFile, getFilesOfDirectory, isAllowedExtension } from './helpers';
+import type { WatchConfig } from './Types';
 
-const fileBackup = async (file: string, saveDir: string) => {
-    await Bun.sleep(50); // fix resource busy or locked, copyfile
-    const today = new Date();
-    const formattedDate = `${today.getDate()}${
-        today.getMonth() + 1
-    }${today.getFullYear()}_${today.getHours()}-${today.getMinutes()}`;
+const useWatch = async (cnf: WatchConfig) => {
+    const files = new Set<string>(await getFilesOfDirectory(cnf.watchDir, cnf.extensions));
+    await mkdir(cnf.saveDir, { recursive: true });
 
-    await copyFile(file, join(saveDir, `${formattedDate}${extname(file)}`));
-};
-
-const useWatch = async (watchDir: string, extensions: string[], saveDir: string) => {
-    const files = new Set<string>(await getFilesOfDirectory(watchDir, extensions));
-    await mkdir(saveDir, { recursive: true });
-
-    const watcher = fs.watch(watchDir, async (eventType, filename) => {
+    const watcher = fs.watch(cnf.watchDir, async (eventType, filename) => {
         if (!filename) {
             console.warn('fs.watch.filename is null');
             return;
@@ -28,16 +19,18 @@ const useWatch = async (watchDir: string, extensions: string[], saveDir: string)
         // delete file
         if (isRename && files.has(filename)) {
             files.delete(filename);
+            return;
         }
+
         // add file
-        else if ((isRename && !files.has(filename)) || eventType === 'change') {
-            const fullPath = join(watchDir, filename);
-            if (!(await isAllowedExtension(fullPath, extensions))) {
+        if ((isRename && !files.has(filename)) || eventType === 'change') {
+            const fullPath = join(cnf.watchDir, filename);
+            if (!(await isAllowedExtension(fullPath, cnf.extensions))) {
                 return;
             }
 
             isRename && files.add(filename);
-            await fileBackup(fullPath, saveDir);
+            await copyFile(fullPath, cnf.saveDir);
         }
     });
 

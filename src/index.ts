@@ -1,4 +1,4 @@
-import { useWatch } from './features/file-handling';
+import * as fh from './features/file-handling';
 import { config, validation } from './shared/config';
 
 if (validation().hasError) {
@@ -13,5 +13,4 @@ process.on('SIGINT', () => {
 
 console.log('config', config);
 
-const { watchDir, watchFileExtensions, saveDir } = config;
-await useWatch(watchDir, watchFileExtensions, saveDir);
+await fh.useWatch(fh.factory.getWatchConfig(config));
