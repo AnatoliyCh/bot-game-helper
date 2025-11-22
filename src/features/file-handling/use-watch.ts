@@ -1,13 +1,15 @@
 import fs from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { copyFile, getFilesOfDirectory, isAllowedExtension } from './helpers';
-import type { WatchConfig } from './Types';
+import { copyFile, createArchive, getFilesOfDirectory, isAllowedExtension } from './helpers';
+import type { WatcherConfig } from './Types';
 
-const useWatch = async (cnf: WatchConfig) => {
+const useWatch = async (cnf: WatcherConfig) => {
+    await mkdir(cnf.watchDir, { recursive: true });
+    await mkdir(cnf.saveDirFiles, { recursive: true });
+
     const files = new Set<string>(await getFilesOfDirectory(cnf.watchDir, cnf.extensions));
-    await mkdir(cnf.saveDir, { recursive: true });
-
+    const savedFiles: string[] = [];
     const watcher = fs.watch(cnf.watchDir, async (eventType, filename) => {
         if (!filename) {
             console.warn('fs.watch.filename is null');
@@ -30,7 +32,14 @@ const useWatch = async (cnf: WatchConfig) => {
             }
 
             isRename && files.add(filename);
-            await copyFile(fullPath, cnf.saveDir);
+            savedFiles.push(await copyFile(fullPath, cnf.saveDirFiles));
+
+            // create archive and delete saved files
+            if (savedFiles.length === cnf.countFilesInArchive) {
+                await createArchive(savedFiles);
+                await Promise.all([savedFiles.map((file) => Bun.file(file).delete())]);
+                savedFiles.length = 0;
+            }
         }
     });
 

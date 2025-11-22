@@ -1,10 +1,10 @@
 import type { config } from '../../shared/config';
-import type { WatchConfig } from './Types';
+import type { WatcherConfig } from './Types';
 
-/** create {@link WatchConfig} */
-const getWatchConfig = (cnfApp: typeof config): WatchConfig => ({
+/** create {@link WatcherConfig} */
+const getWatcherConfig = (cnfApp: typeof config): WatcherConfig => ({
     extensions: cnfApp.watchFileExtensions,
     ...cnfApp,
 });
 
-export default { getWatchConfig };
+export default { getWatcherConfig };

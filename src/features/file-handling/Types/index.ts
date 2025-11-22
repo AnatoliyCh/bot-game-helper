@@ -1,3 +1,3 @@
-import type { WatchConfig } from './WatchConfig';
+import type { WatcherConfig } from './WatcherConfig';
 
-export type { WatchConfig };
+export type { WatcherConfig };

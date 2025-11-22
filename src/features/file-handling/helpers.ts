@@ -1,5 +1,7 @@
+import { spawn } from 'bun';
 import { readdir, stat } from 'node:fs/promises';
 import { extname, join } from 'node:path';
+import { config } from '../../shared/config';
 import sharedHelpers from '../../shared/helpers';
 
 /** path is file and allowed extension */
@@ -26,10 +28,27 @@ export const getFilesOfDirectory = async (
 };
 
 /** copying a file */
-export const copyFile = async (filePath: string, saveDir: string) => {
-    const newfile = join(
+export const copyFile = async (filePath: string, saveDir: string): Promise<string> => {
+    const newFilePath = join(
         saveDir,
-        [sharedHelpers.formatDate(new Date(), 'yyyyMMdd_mm'), extname(filePath)].join('')
+        [sharedHelpers.formatDate(new Date(), 'yyyyMMdd_mm_ss'), extname(filePath)].join('')
     );
-    await Bun.write(newfile, await Bun.file(filePath).arrayBuffer());
+    await Bun.write(newFilePath, await Bun.file(filePath).arrayBuffer());
+
+    return newFilePath;
+};
+
+export const createArchive = async (files: string[]) => {
+    const archivePath = join(
+        config.saveDirArchives,
+        sharedHelpers.formatDate(new Date(), 'yyyyMMdd_mm_ss')
+    );
+    const proc = spawn({
+        cmd: [config.fileArchiver, 'a', '-mx9', archivePath, ...files],
+        stdout: 'inherit',
+        stderr: 'inherit',
+    });
+
+    const exit = await proc.exited;
+    if (exit !== 0) throw new Error('7Z error');
 };

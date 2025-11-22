@@ -13,4 +13,4 @@ process.on('SIGINT', () => {
 
 console.log('config', config);
 
-await fh.useWatch(fh.factory.getWatchConfig(config));
+await fh.useWatch(fh.factory.getWatcherConfig(config));
